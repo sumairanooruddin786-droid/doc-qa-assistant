@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knowledge Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Newsreader:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F2F4F1;--card:#FBFCFA;--ink:#1B2A2F;--muted:#5E6F72;--teal:#0E6B6B;--teal-d:#0A4F4F;--mark:#FFE27A;--rule:#D5DAD3;--bad:#B3402A}
+@media (prefers-color-scheme:dark){:root{--paper:#121A1C;--card:#182326;--ink:#E7EEEC;--muted:#8FA3A5;--teal:#4FC3BE;--teal-d:#7FD8D3;--mark:#6B5A12;--rule:#2A383B}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif}
+h1,h2,h3{font-family:'Bricolage Grotesque',Inter,sans-serif;margin:0;letter-spacing:-.01em}
+.app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+aside{border-right:1px solid var(--rule);padding:28px 22px;position:sticky;top:0;height:100vh;overflow:auto}
+aside h1{font-size:22px;line-height:1.15}
+aside p.sub{color:var(--muted);margin:6px 0 24px;font-size:13px}
+.drop{display:block;border:1.5px dashed var(--teal);border-radius:10px;padding:18px;text-align:center;cursor:pointer;color:var(--teal-d);background:var(--card);transition:background .15s}
+.drop.over{background:var(--mark)}
+.drop small{display:block;color:var(--muted);margin-top:4px}
+.docs{list-style:none;padding:0;margin:20px 0 0}
+.docs li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--rule);font-size:13.5px}
+.docs .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.docs .c{color:var(--muted);font-size:12px;white-space:nowrap}
+.docs button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px}
+.docs button:hover{color:var(--bad)}
+main{padding:28px 40px 60px;max-width:980px}
+nav{display:flex;gap:6px;border-bottom:1px solid var(--rule);margin-bottom:26px}
+nav button{background:none;border:0;padding:10px 16px;font:500 14px Inter;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+nav button.on{color:var(--ink);border-color:var(--teal)}
+nav button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.view{display:none}.view.on{display:block}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+input[type=text],select{font:inherit;padding:11px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--card);color:var(--ink)}
+input[type=text]{flex:1;min-width:220px}
+.btn{font:500 14px Inter;padding:11px 20px;border:0;border-radius:8px;background:var(--teal);color:#fff;cursor:pointer}
+@media (prefers-color-scheme:dark){.btn{color:#0b1a1b}}
+.btn:disabled{opacity:.5;cursor:wait}
+.hint{color:var(--muted);font-size:13px;margin:10px 0 0}
+.chunk{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--teal);border-radius:8px;padding:16px 18px;margin-top:14px}
+.chunk .meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:8px}
+.chunk .src{font-weight:500;color:var(--ink)}
+.chunk p{margin:0;font-family:Newsreader,Georgia,serif;font-size:16.5px;line-height:1.6}
+.meter{height:6px;background:var(--rule);border-radius:4px;overflow:hidden;margin-top:10px}
+.meter i{display:block;height:100%;background:var(--teal)}
+.answer{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 24px;margin-top:20px}
+.answer .txt{font-family:Newsreader,Georgia,serif;font-size:18px;line-height:1.65;white-space:pre-wrap}
+.answer h3{font-size:13px;color:var(--muted);font-weight:500;margin:22px 0 0;font-family:Inter}
+.explain{margin-top:34px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.explain div{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
+.explain h3{font-size:16px;margin-bottom:6px}
+.explain p{margin:0;font-size:14px;color:var(--muted)}
+.qbox{width:100%;font:inherit;padding:12px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--card);color:var(--ink);min-height:130px}
+.cmp{margin-top:22px;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.cmp>h3{font-size:16px;margin-bottom:12px}
+.techs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tech{border:1px solid var(--rule);border-radius:8px;padding:12px 14px;font-size:13.5px}
+.tech b{display:block;margin-bottom:4px;font-family:'Bricolage Grotesque';font-size:14px}
+.tech .sc{display:inline-block;background:var(--mark);color:var(--ink);padding:1px 8px;border-radius:4px;font-size:12px;margin-bottom:6px}
+.tech div.a{white-space:pre-wrap}
+.avg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.avg div{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:16px;text-align:center}
+.avg div.win{border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal)}
+.avg strong{font:700 30px 'Bricolage Grotesque';display:block}
+.err{color:var(--bad);margin-top:14px}
+.spin{color:var(--muted);margin-top:16px}
+@media(max-width:860px){.app{grid-template-columns:1fr}aside{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule)}main{padding:22px 18px}.explain,.techs,.avg{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <h1>Knowledge Assistant</h1>
+  <p class="sub">Upload documents, then search or ask questions about them.</p>
+  <label class="drop" id="drop" for="file">Drop files or click to upload<small>PDF, TXT or Markdown</small></label>
+  <input id="file" type="file" multiple accept=".pdf,.txt,.md,.markdown" hidden>
+  <div class="hint" id="upmsg"></div>
+  <ul class="docs" id="docs"></ul>
+</aside>
+<main>
+  <nav id="tabs">
+    <button class="on" data-v="ask">Ask</button>
+    <button data-v="search">Semantic search</button>
+    <button data-v="compare">Compare prompts</button>
+  </nav>
+
+  <section class="view on" id="ask">
+    <div class="row">
+      <input type="text" id="aq" placeholder="Ask something about your documents">
+      <select id="tech">
+        <option value="role_based">Role-based</option>
+        <option value="few_shot">Few-shot</option>
+        <option value="zero_shot">Zero-shot</option>
+      </select>
+      <button class="btn" id="askbtn">Get answer</button>
+    </div>
+    <div id="aout"></div>
+  </section>
+
+  <section class="view" id="search">
+    <div class="row">
+      <input type="text" id="sq" placeholder="Search by meaning, e.g. forgot my login">
+      <button class="btn" id="sbtn">Find top 3 chunks</button>
+    </div>
+    <p class="hint">Distance is cosine distance (lower means closer). Similarity is 1 minus distance.</p>
+    <div id="sout"></div>
+    <div class="explain">
+      <div><h3>Keyword search</h3><p>Matches the exact words you type. "forgot my login" will miss a passage that says "reset your password", because the words differ.</p></div>
+      <div><h3>Semantic search</h3><p>Turns text into embeddings and matches meaning. Synonyms and paraphrases land close together in vector space, so the right passage is found without shared words.</p></div>
+    </div>
+  </section>
+
+  <section class="view" id="compare">
+    <p class="hint" style="margin:0 0 10px">One question per line. Leave the default five to run the assignment test. Each question is answered with all three prompt templates on the same retrieved context.</p>
+    <textarea class="qbox" id="cq"></textarea>
+    <div class="row" style="margin-top:12px;align-items:center">
+      <button class="btn" id="cbtn">Run comparison</button>
+      <label class="hint" style="margin:0"><input type="checkbox" id="judge" checked> Score with an LLM judge</label>
+    </div>
+    <div id="cout"></div>
+  </section>
+</main>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const NAMES={zero_shot:'Zero-shot',few_shot:'Few-shot',role_based:'Role-based'};
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(url,opt){const r=await fetch(url,opt);const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||'Request failed');return j}
+const post=(u,b)=>api(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+
+$('#cq').value=["What is the difference between semantic search and keyword search?","Why do we split documents into chunks before embedding them?","How does Retrieval-Augmented Generation reduce hallucinations?","What is a vector database used for?","What does cosine similarity measure?"].join('\n');
+
+$('#tabs').onclick=e=>{const v=e.target.dataset.v;if(!v)return;
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b===e.target));
+ document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id===v))};
+
+async function loadDocs(){
+ const d=await api('/api/documents');
+ $('#docs').innerHTML=d.length?d.map(x=>`<li><span class="n" title="${esc(x.name)}">${esc(x.name)}</span><span class="c">${x.chunks} chunks</span><button aria-label="Delete ${esc(x.name)}" data-n="${esc(x.name)}">×</button></li>`).join(''):'<li class="c">No documents yet. Upload a file to start.</li>'}
+$('#docs').onclick=async e=>{const n=e.target.dataset.n;if(!n)return;await api('/api/documents/'+encodeURIComponent(n),{method:'DELETE'});loadDocs()};
+
+async function upload(files){
+ if(!files.length)return;const fd=new FormData();[...files].forEach(f=>fd.append('files',f));
+ $('#upmsg').textContent='Reading and embedding...';
+ try{const r=await api('/api/upload',{method:'POST',body:fd});$('#upmsg').textContent=`Added ${r.length} file(s).`;loadDocs()}
+ catch(e){$('#upmsg').textContent=e.message}}
+$('#file').onchange=e=>upload(e.target.files);
+const drop=$('#drop');
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>upload(e.dataTransfer.files));
+
+function chunkCard(h,i){return `<div class="chunk"><div class="meta"><span class="src">#${i+1} · ${esc(h.source)}, chunk ${h.chunk}</span><span>distance ${h.distance} · similarity ${(h.similarity*100).toFixed(1)}%</span></div><p>${esc(h.text)}</p><div class="meter"><i style="width:${Math.max(0,h.similarity*100)}%"></i></div></div>`}
+
+async function run(btn,out,fn){btn.disabled=true;out.innerHTML='<div class="spin">Working...</div>';
+ try{out.innerHTML=await fn()}catch(e){out.innerHTML=`<div class="err">${esc(e.message)}</div>`}btn.disabled=false}
+
+$('#sbtn').onclick=()=>{const q=$('#sq').value.trim();if(q)run($('#sbtn'),$('#sout'),async()=>{const r=await post('/api/search',{question:q});return r.results.map(chunkCard).join('')})};
+$('#askbtn').onclick=()=>{const q=$('#aq').value.trim();if(q)run($('#askbtn'),$('#aout'),async()=>{const r=await post('/api/ask',{question:q,technique:$('#tech').value});
+ return `<div class="answer"><div class="txt">${esc(r.answer)}</div><h3>Sources used (${NAMES[r.technique]})</h3>${r.sources.map(chunkCard).join('')}</div>`})};
+$('#aq').onkeydown=e=>{if(e.key==='Enter')$('#askbtn').click()};
+$('#sq').onkeydown=e=>{if(e.key==='Enter')$('#sbtn').click()};
+
+$('#cbtn').onclick=()=>{const qs=$('#cq').value.split('\n').map(s=>s.trim()).filter(Boolean);if(!qs.length)return;
+ run($('#cbtn'),$('#cout'),async()=>{const r=await post('/api/compare',{questions:qs,judge:$('#judge').checked});
+  const av=r.average_scores,best=Object.entries(av).filter(e=>e[1]!=null).sort((a,b)=>b[1]-a[1])[0]?.[0];
+  let h=`<div class="avg">${Object.keys(NAMES).map(k=>`<div class="${k===best?'win':''}">${NAMES[k]}<strong>${av[k]??'-'}</strong><small class="hint">average out of 5</small></div>`).join('')}</div>`;
+  h+=r.rows.map(row=>`<div class="cmp"><h3>${esc(row.question)}</h3><div class="techs">${Object.keys(NAMES).map(k=>{const x=row.results[k],s=x.score;
+   return `<div class="tech"><b>${NAMES[k]}</b>${s?`<span class="sc">accuracy ${s.accuracy} · clarity ${s.clarity} · relevance ${s.relevance}</span>`:''}<div class="a">${esc(x.answer)}</div></div>`}).join('')}</div></div>`).join('');
+  return h})};
+loadDocs();
+</script>
+</body>
+</html>
